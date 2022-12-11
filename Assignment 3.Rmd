@@ -1,0 +1,105 @@
+---
+title: "Assignment 3"
+output:
+  word_document: default
+  pdf_document: default
+date: '2022-12-11'
+---
+Part A:
+
+QA1. 
+In a SVM hard margin, C is equal to infinity. This means there are no margin violations. 
+While a soft margin decreases the cost parameter and therefore allows for some margin violations and training error. Margins provide trade offs between the number of mistakes and the margin of violations in training data. 
+
+QA2. A cost parameter is a regularization parameter that decides how much an SVM should bend with the data. In SVM we can test different numbers of this parameter to allow so many or so little training violations. 
+
+QA3.  The perceptron will not be activated because it does not reach the activation threshold. 
+
+(0.1) *(0.8) = 0.08 
+11.1 * (-0.2) =  -2.22 
+0.08  + - 2.22 = - 2.14 
+ -2.14 < 2.8
+
+
+QA4. The alpha determines how fast the weights should be changed. The higher the alpha, the faster change of weights should happen. The goal is to find the fastest learning rate possible. 
+
+Part B; 
+
+```{r}
+library(ISLR)
+library(glmnet)
+library(caret)
+library(dplyr)
+
+Carseats_Filtered <- Carseats %>% select("Sales", "Price", "Advertising","Population","Age","Income","Education") 
+View(Carseats_Filtered)
+
+#QB1. 
+
+library(kernlab)
+library(rpart)
+
+
+set.seed(123)
+intrain <- createDataPartition(y = Carseats_Filtered$Sales, p = 0.7, list = FALSE)
+
+training <- Carseats_Filtered[intrain,]
+testing <- Carseats_Filtered[-intrain,]
+
+model <- train(Sales~., data = training, method = 'svmLinear',)
+model
+
+```
+The r-squared of the model is .32723.
+
+```{r}
+#QB2
+set.seed(123)
+trctrl <- trainControl(method = "repeatedcv", number = 5, repeats = 2)
+grid <- expand.grid(C = c(0.1,0.5,0.1, 10))
+svm_linear_grid <- train(Sales~., data = training, method = "svmLinear", trControl=trctrl, tuneGrid = grid, tuneLength = 10)
+svm_linear_grid
+
+```
+
+
+```{r}
+#QB3
+library(neuralnet)
+#DataFrame
+mydata = data.frame(Carseats_Filtered)
+summary(mydata)
+```
+```{r}
+ #Scaled Data 
+Scale_Model = preProcess(mydata, center = TRUE, scale = TRUE)
+MyData_Scaled= predict(Scale_Model,mydata)
+summary(MyData_Scaled)
+```
+```{r}
+samplesize = 0.60 *nrow(mydata)
+set.seed(124)
+
+index = sample(seq_len( nrow ( mydata ) ), size = samplesize )
+
+trainTrainsformed = MyData_Scaled[index,]
+testTransformed = (MyData_Scaled[-index,])
+
+#First Model
+# RR: the question is asking to use the train function of caret with nnet method, not nerualnet method
+
+NN = train(Sales ~ Price + Advertising + Population + Age + Income + Education, data = trainTrainsformed, method="nnet")
+NN
+```
+The because my model did not turn out. I am using the best RMSE that isn't a Nan value to answer this question. The best model in my case would be the mdoel with an RMSE of .9588 and R-squared of .2508. 
+```{r}
+plot(NN)
+
+```
+```{r}
+#Question 4
+grid <- expand.grid(Sales = 9, Price = 6.54, Population = 124, Advertising = 0, Age = 76, Income = 110, Education = 10)
+prediction = predict(NN,grid, data = trainTrainsformed) 
+prediction 
+```
+I am not sure this is correct. I emailed you to set up a time but never heard back before the assignment was due. 
